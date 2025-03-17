@@ -1,9 +1,8 @@
 const express = require('express');
-const {authorizeRole} = require('../middleware'); // Импортируем middleware
+const {authorizeRole} = require('../middleware');
 const MENTrouter = express.Router();
 const { authenticateToken, getUserRole } = require("../middleware");
 
-// Пример защищенного маршрута для администраторов
 MENTrouter.get("/checkmentor", authenticateToken, async (req, res) => {
     const role = await getUserRole(req.user.id);
     if (!role) {
