@@ -6,8 +6,8 @@ const logsRouter = express.Router();
 
 function readLastLines(filePath, maxLines) {
     const data = fs.readFileSync(filePath, "utf8");
-    const lines = data.split("\n").filter(line => line.trim() !== ""); // Убираем пустые строки
-    return lines.slice(-maxLines).join("\n"); // Берем последние maxLines строк
+    const lines = data.split("\n").filter(line => line.trim() !== "");
+    return lines.slice(-maxLines).join("\n");
 }
 
 logsRouter.get("/view", authenticateToken, authorizeRole(["admin", "mentor"]), async (req, res) => {
@@ -16,10 +16,8 @@ logsRouter.get("/view", authenticateToken, authorizeRole(["admin", "mentor"]), a
         if (!fs.existsSync(logFilePath)) {
             return res.status(404).json({ error: "Файл логов не найден" });
         }
-
-        const maxLines = parseInt(req.query.limit) || 100; // Можно передавать ?limit=50 (по умолчанию 100)
+        const maxLines = parseInt(req.query.limit) || 100;
         const logs = readLastLines(logFilePath, maxLines);
-
         res.json({ logs });
     } catch (error) {
         console.error("Ошибка чтения логов:", error);
