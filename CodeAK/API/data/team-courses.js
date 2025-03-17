@@ -11,7 +11,6 @@ const pool = new Pool({
     port: process.env.DB_PORT,
 });
 
-// Получение всех команд (для выбора в модальном окне)
 teamCoursesRouter.get("/teams/all", authenticateToken, async (req, res) => {
     try {
         const result = await pool.query("SELECT id, team_name FROM teams ORDER BY team_name");
@@ -22,7 +21,6 @@ teamCoursesRouter.get("/teams/all", authenticateToken, async (req, res) => {
     }
 });
 
-// Получение списка команд, привязанных к конкретному курсу
 teamCoursesRouter.get("/:courseId/teams", authenticateToken, async (req, res) => {
     const { courseId } = req.params;
     try {
@@ -37,7 +35,6 @@ teamCoursesRouter.get("/:courseId/teams", authenticateToken, async (req, res) =>
     }
 });
 
-// Сохранение списка команд для курса
 teamCoursesRouter.put("/:courseId/teams", authenticateToken, authorizeRole(["admin", "mentor"]), async (req, res) => {
     const { courseId } = req.params;
     const { teamIds } = req.body;
