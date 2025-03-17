@@ -1,7 +1,7 @@
 const express = require('express');
 const { Pool } = require('pg');
 const jwt = require('jsonwebtoken');
-const {authenticateToken} = require('./middleware'); // Middleware для проверки токена
+const {authenticateToken} = require('./middleware');
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
@@ -24,11 +24,6 @@ if (!fs.existsSync(UPLOADS_DIR)) {
 }
 
 const storage = multer.diskStorage({
-    // destination: UPLOADS_DIR,
-    // filename: (req, file, cb) => {
-    //     const ext = path.extname(file.originalname);
-    //     cb(null, `avatar-${req.user.id}${ext}`);
-    // },
     destination: (req, file, cb) => {
         console.log("Файл сохраняется в папку:", UPLOADS_DIR);
         cb(null, UPLOADS_DIR);
@@ -117,7 +112,6 @@ router.get("/profile", authenticateToken, async (req, res) => {
         if (user.rows.length === 0) {
             return res.status(404).json({ error: "Пользователь не найден" });
         }
-        // Добавляем URL к аватару
         const avatarUrl = user.rows[0].avatar
             ? `${baseBackendUrl}/uploads/${user.rows[0].avatar}`
             : "";
