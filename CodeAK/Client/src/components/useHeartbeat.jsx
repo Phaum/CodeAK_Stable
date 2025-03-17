@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import {baseBackendUrl} from "../shared/constants";
 
-const useHeartbeat = (interval = 300000) => { // интервал в миллисекундах (по умолчанию 60 секунд)
+const useHeartbeat = (interval = 300000) => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     const sendHeartbeat = async () => {
