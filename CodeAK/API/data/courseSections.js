@@ -70,17 +70,14 @@ courseSectionsRouter.get("/:sectionId", authenticateToken, async (req, res) => {
             [sectionId]
         );
         if (result.rowCount === 0) return res.status(404).json({ error: "Раздел не найден" });
-
         const section = result.rows[0];
         const absoluteFilePath = path.join(process.cwd(), section.file_path);
 
         if (!fs.existsSync(absoluteFilePath)) {
             return res.status(404).json({ error: "Файл с контентом не найден" });
         }
-
         const content_md = fs.readFileSync(absoluteFilePath, "utf8");
         const attachmentsResult = await pool.query('SELECT * FROM section_attachments WHERE section_id = $1', [sectionId]);
-        // console.log(attachmentsResult);
         res.json({ ...section, content_md, attachments: attachmentsResult.rows });
     } catch (error) {
         console.error("Ошибка получения содержимого раздела:", error);
@@ -89,21 +86,16 @@ courseSectionsRouter.get("/:sectionId", authenticateToken, async (req, res) => {
 });
 
 courseSectionsRouter.post("/", authenticateToken, authorizeRole(["admin", "mentor"]), async (req, res) => {
-    // const courseId = req.params.id;
     const courseId = req.params.id || req.baseUrl.split('/')[2];
     const { section_title, content_md, section_description } = req.body;
-
     try {
         const folderPath = path.join(process.cwd(), "course_content", courseId);
         if (!fs.existsSync(folderPath)) {
             fs.mkdirSync(folderPath, { recursive: true });
         }
-
         const fileName = `section-${Date.now()}.md`;
         const filePath = path.join(folderPath, fileName);
-
         fs.writeFileSync(filePath, content_md, "utf8");
-
         const relativePath = `/course_content/${courseId}/${fileName}`;
         const result = await pool.query(
             `INSERT INTO course_sections (course_id, section_title, file_path, section_order, section_description) 
@@ -111,7 +103,6 @@ courseSectionsRouter.post("/", authenticateToken, authorizeRole(["admin", "mento
              RETURNING *`,
             [courseId, section_title, relativePath, section_description]
         );
-
         res.json(result.rows[0]);
     } catch (error) {
         console.error("Ошибка создания раздела:", error);
