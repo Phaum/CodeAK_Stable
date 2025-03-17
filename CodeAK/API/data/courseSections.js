@@ -5,8 +5,6 @@ const { Pool } = require("pg");
 const multer = require("multer");
 const courseSectionsRouter = express.Router();
 const { authenticateToken, authorizeRole } = require("./middleware");
-
-// const courseSectionsRouter = express.Router({ mergeParams: true });
 const pool = new Pool({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
@@ -50,7 +48,6 @@ courseSectionsRouter.get("/view", authenticateToken, async (req, res) => {
     }
 });
 
-// Получение всех разделов курса
 courseSectionsRouter.get("/", authenticateToken, async (req, res) => {
     const courseId = req.params.id || req.baseUrl.split('/')[2];
     try {
@@ -65,7 +62,6 @@ courseSectionsRouter.get("/", authenticateToken, async (req, res) => {
     }
 });
 
-// Получение содержимого раздела (чтение .md файла)
 courseSectionsRouter.get("/:sectionId", authenticateToken, async (req, res) => {
     const { sectionId } = req.params;
     try {
@@ -92,7 +88,6 @@ courseSectionsRouter.get("/:sectionId", authenticateToken, async (req, res) => {
     }
 });
 
-// Создание нового раздела (сохранение контента в .md файл)
 courseSectionsRouter.post("/", authenticateToken, authorizeRole(["admin", "mentor"]), async (req, res) => {
     // const courseId = req.params.id;
     const courseId = req.params.id || req.baseUrl.split('/')[2];
@@ -126,42 +121,29 @@ courseSectionsRouter.post("/", authenticateToken, authorizeRole(["admin", "mento
 
 courseSectionsRouter.put("/content", authenticateToken, authorizeRole(["admin", "mentor"]), upload.array("files"), async (req, res) => {
     const { courseId, sectionId, content_md } = req.body;
-
     if (!sectionId) {
         return res.status(400).json({ error: "Отсутствует sectionId" });
     }
-
     try {
-        // Получаем путь к markdown файлу
         const result = await pool.query("SELECT file_path FROM course_sections WHERE id = $1", [sectionId]);
-
         if (result.rowCount === 0) {
             return res.status(404).json({ error: "Раздел не найден" });
         }
-
         const mdFilePath = path.join(process.cwd(), result.rows[0].file_path);
-
-        // Обновляем Markdown-файл
         if (content_md) {
             fs.writeFileSync(mdFilePath, content_md, "utf8");
         }
-
-        // Сохраняем файлы в БД
         if (req.files && req.files.length > 0) {
             const attachments = req.files.map((file) => ({
                 filename: file.originalname,
                 file_path: `/uploads/course_content/section-${sectionId}/${file.originalname}`,
             }));
-
             for (const attachment of attachments) {
-                // Проверяем, существует ли файл в базе данных
                 const existingFile = await pool.query(
                     "SELECT id FROM section_attachments WHERE course_id = $1 AND section_id = $2 AND filename = $3",
                     [courseId, sectionId, attachment.filename]
                 );
-
                 if (existingFile.rowCount === 0) {
-                    // Если файла нет, добавляем в базу
                     await pool.query(
                         "INSERT INTO section_attachments (course_id, section_id, filename, file_path) VALUES ($1, $2, $3, $4)",
                         [courseId, sectionId, attachment.filename, attachment.file_path]
@@ -181,31 +163,25 @@ courseSectionsRouter.put("/content", authenticateToken, authorizeRole(["admin", 
 
 courseSectionsRouter.put("/reorder", authenticateToken, authorizeRole(["admin", "mentor"]), async (req, res) => {
     const { sections } = req.body;
-
-    // Проверяем входные данные
     if (!Array.isArray(sections) || sections.length === 0) {
         return res.status(400).json({ error: "Некорректные данные для обновления" });
     }
-
     const client = await pool.connect();
     try {
-        await client.query("BEGIN"); // Начинаем транзакцию
-
+        await client.query("BEGIN");
         for (const { id, order } of sections) {
             if (!Number.isInteger(id) || !Number.isInteger(order)) {
                 throw new Error(`Некорректные данные: id=${id}, order=${order}`);
             }
-
             await client.query(
                 "UPDATE course_sections SET section_order = $1 WHERE id = $2",
                 [order, id]
             );
         }
-
-        await client.query("COMMIT"); // Фиксируем изменения
+        await client.query("COMMIT");
         res.json({ message: "Порядок разделов обновлён" });
     } catch (error) {
-        await client.query("ROLLBACK"); // Откатываем изменения в случае ошибки
+        await client.query("ROLLBACK");
         console.error("Ошибка изменения порядка разделов:", error);
         res.status(500).json({ error: "Ошибка сервера" });
     } finally {
@@ -213,11 +189,9 @@ courseSectionsRouter.put("/reorder", authenticateToken, authorizeRole(["admin", 
     }
 });
 
-// Обновление раздела (редактирование названия и содержимого)
 courseSectionsRouter.put("/:sectionId", authenticateToken, authorizeRole(["admin", "mentor"]), async (req, res) => {
     const { sectionId } = req.params;
     const { section_title, section_description, content_md } = req.body;
-
     try {
         const result = await pool.query(
             "SELECT * FROM course_sections WHERE id = $1",
@@ -240,14 +214,12 @@ courseSectionsRouter.put("/:sectionId", authenticateToken, authorizeRole(["admin
                 [section_title, sectionId]
             );
         }
-
         if (section_description) {
             await pool.query(
                 "UPDATE course_sections SET section_description = $1 WHERE id = $2",
                 [section_description, sectionId]
             );
         }
-
         res.json({ message: "Раздел обновлён" });
     } catch (error) {
         console.error("Ошибка обновления раздела:", error);
@@ -257,74 +229,54 @@ courseSectionsRouter.put("/:sectionId", authenticateToken, authorizeRole(["admin
 
 courseSectionsRouter.delete("/:sectionId/attachments/:fileId", authenticateToken, authorizeRole(["admin", "mentor"]), async (req, res) => {
     const { sectionId, fileId } = req.params;
-    // console.log(sectionId, fileId)
     try {
-        // Получаем путь файла из БД
         const result = await pool.query(
             "SELECT file_path FROM section_attachments WHERE section_id = $1 AND id = $2",
             [sectionId, fileId]
         );
-
         if (result.rowCount === 0) {
             return res.status(404).json({ error: "Файл не найден" });
         }
-
-        const { file_path } = result.rows[0]; // Относительный путь к файлу
-        const absoluteFilePath = path.join(process.cwd(), file_path); // Абсолютный путь
-
-        // Удаляем физический файл, если он существует
+        const { file_path } = result.rows[0];
+        const absoluteFilePath = path.join(process.cwd(), file_path);
         if (fs.existsSync(absoluteFilePath)) {
             fs.unlinkSync(absoluteFilePath);
         }
-
-        // Удаляем запись о файле из БД
         await pool.query(
             "DELETE FROM section_attachments WHERE section_id = $1 AND id = $2",
             [sectionId, fileId]
         );
-
         res.json({ message: "Файл удалён" });
     } catch (error) {
         console.error("Ошибка удаления файла:", error);
         res.status(500).json({ error: "Ошибка сервера" });
     }
 });
-
-// Удаление раздела (удаляется .md файл и запись в БД)
 courseSectionsRouter.delete("/:sectionId", authenticateToken, authorizeRole(["admin", "mentor"]), async (req, res) => {
     const { sectionId } = req.params;
-
     try {
-        // Получаем пути всех прикрепленных файлов
         const attachments = await pool.query(
             "SELECT file_path FROM section_attachments WHERE section_id = $1",
             [sectionId]
         );
-        // Удаляем файлы с сервера
         for (const file of attachments.rows) {
             const absoluteFilePath = path.join(process.cwd(), file.file_path);
             if (fs.existsSync(absoluteFilePath)) {
                 fs.unlinkSync(absoluteFilePath);
             }
         }
-        // Удаляем записи о прикрепленных файлах из БД
         await pool.query("DELETE FROM section_attachments WHERE section_id = $1", [sectionId]);
-
         const result = await pool.query(
             "SELECT file_path FROM course_sections WHERE id = $1",
             [sectionId]
         );
         if (result.rowCount === 0) return res.status(404).json({ error: "Раздел не найден" });
-
         const { file_path } = result.rows[0];
         const absoluteFilePath = path.join(process.cwd(), file_path);
-
         if (fs.existsSync(absoluteFilePath)) {
             fs.unlinkSync(absoluteFilePath);
         }
-
         await pool.query("DELETE FROM course_sections WHERE id = $1", [sectionId]);
-
         res.json({ message: "Раздел удалён" });
     } catch (error) {
         console.error("Ошибка удаления раздела:", error);
@@ -335,17 +287,14 @@ courseSectionsRouter.delete("/:sectionId", authenticateToken, authorizeRole(["ad
 courseSectionsRouter.put("/visibility/:id", authenticateToken, authorizeRole(["admin", "mentor"]), async (req, res) => {
     const { id } = req.params;
     const { visible } = req.body;
-
     try {
         const result = await pool.query(
             "UPDATE course_sections SET visible = $1 WHERE id = $2 RETURNING visible",
             [visible, id]
         );
-
         if (result.rowCount === 0) {
             return res.status(404).json({ error: "Новость не найдена" });
         }
-
         res.json({ message: "Видимость обновлена", visible: result.rows[0].visible });
     } catch (error) {
         console.error("Ошибка изменения видимости новости:", error);
