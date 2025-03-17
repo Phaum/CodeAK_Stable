@@ -139,7 +139,7 @@ const Layout = () => {
             fixSiderbar
             fixedHeader
             navTheme={theme}
-            collapsed={menuCollapsed} // Управление состоянием меню
+            collapsed={menuCollapsed}
             onCollapse={(collapsed) => {
                 setMenuCollapsed(collapsed);
                 if (!collapsed) {
