@@ -3,8 +3,8 @@ const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
-
-const SECRET_KEY = "your_secret_key";
+const {JWT_SECRET} = require("../constants");
+const SECRET_KEY = JWT_SECRET;
 
 const rankingRouter = express.Router();
 
