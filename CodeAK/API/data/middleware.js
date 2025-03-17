@@ -30,10 +30,7 @@ const authenticateToken = async (req, res, next) => {
         return res.status(403).json({ message: "Неверный токен" });
     }
 };
-/**
- * Middleware для проверки роли пользователя
- * @param {string[]} roles - Допустимые роли (например: ['admin', 'moderator'])
- */
+
 const authorizeRole = (roles) => async (req, res, next) => {
     try {
         const userId = req.user.id;
@@ -57,7 +54,6 @@ const getUserRole = async (userId) => {
         const result = await pool.query("SELECT role FROM users WHERE id = $1", [userId]);
 
         if (result.rows.length === 0) {
-            // console.log(`Пользователь с ID ${userId} не найден`);
             return null;
         }
         return result.rows[0].role;
