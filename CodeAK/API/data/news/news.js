@@ -50,8 +50,6 @@ newsRouter.get('/', authenticateToken, async (req, res) => {
 });
 
 newsRouter.post('/add', authenticateToken, authorizeRole(["admin", "mentor"]), upload.single('image'), async (req, res) => {
-    // console.log('Файл:', req.file);
-    // console.log('Тело запроса:', req.body);
     const { title, description, date, tags } = req.body;
     try {
         const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
@@ -61,17 +59,14 @@ newsRouter.post('/add', authenticateToken, authorizeRole(["admin", "mentor"]), u
         if (!fs.existsSync(folderPath)) {
             fs.mkdirSync(folderPath, { recursive: true });
         }
-        // Создаём уникальное имя файла
         const fileName = `news-${Date.now()}.md`;
         const filePath = path.join(folderPath, fileName);
         fs.writeFileSync(filePath, '', "utf8");
         const relativePath = `/news_content/${fileName}`;
-
         const newNews = await pool.query(
             'INSERT INTO news (title, description, date, tags, imageurl, file_path) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
             [title, description, date, parsedTags, imageUrl, relativePath]
         );
-
         res.json(newNews.rows[0]);
     } catch (error) {
         console.error('Ошибка добавления новости:', error);
@@ -122,32 +117,27 @@ newsRouter.delete('/delete/:id', authenticateToken, authorizeRole(["admin", "men
 
 newsRouter.put('/reorder', authenticateToken, authorizeRole(["admin", "mentor"]), async (req, res) => {
     const { reorderedNews } = req.body.reorderedNews;
-    // console.log("Получены данные:", JSON.stringify(reorderedNews, null, 2)); // Логируем запрос
-
     if (!Array.isArray(reorderedNews) || reorderedNews.length === 0) {
         console.error("Ошибка: Некорректные данные", req.body);
         return res.status(400).json({ error: "Некорректные данные" });
     }
-
     const client = await pool.connect();
     try {
-        await client.query("BEGIN"); // Начинаем транзакцию
+        await client.query("BEGIN");
         for (const news of reorderedNews) {
             if (!news.id || typeof news.position !== "number") {
                 console.error("Ошибка: Некорректные данные курса", news);
                 return res.status(400).json({ error: "Некорректные данные курса" });
             }
-            // console.log(news.position, news.id);
             await client.query(
                 "UPDATE news SET position = $1 WHERE id = $2",
                 [news.position, news.id]
             );
         }
-
-        await client.query("COMMIT"); // Фиксируем изменения
+        await client.query("COMMIT");
         res.json({ message: "Порядок курсов обновлён!" });
     } catch (error) {
-        await client.query("ROLLBACK"); // Откат изменений при ошибке
+        await client.query("ROLLBACK");
         console.error("Ошибка при изменении порядка курсов:", error);
         res.status(500).json({ error: "Ошибка сервера" });
     } finally {
@@ -164,7 +154,6 @@ newsRouter.get('/content/:id', authenticateToken, async (req, res) => {
         );
         if (result.rowCount === 0) return res.status(404).json({ error: "Раздел не найден" });
         const section = result.rows[0];
-        // console.log(section);
         const absoluteFilePath = path.join(process.cwd(), section.file_path);
         if (!fs.existsSync(absoluteFilePath)) {
             return res.status(404).json({ error: "Файл с контентом не найден" });
@@ -178,7 +167,6 @@ newsRouter.get('/content/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// Настраиваем хранилище для вложений
 const attachmentStorage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'uploads/attachments/');
@@ -188,7 +176,6 @@ const attachmentStorage = multer.diskStorage({
     },
 });
 const uploadAttachments = multer({ storage: attachmentStorage }).array('attachments');
-
 newsRouter.put('/content/:id', authenticateToken, authorizeRole(["admin", "mentor"]), uploadAttachments, async (req, res) => {
     const { id } = req.params;
     const { content_md } = req.body;
@@ -237,7 +224,6 @@ newsRouter.delete('/attachment/:id', authenticateToken, authorizeRole(["admin", 
                 console.error("Ошибка удаления файла:", err);
                 return res.status(500).json({ error: "Ошибка удаления файла" });
             }
-            // Удаляем запись из таблицы attachments
             await pool.query('DELETE FROM news_attachments WHERE id = $1', [id]);
             res.json({ message: "Вложение удалено" });
         });
@@ -255,11 +241,9 @@ newsRouter.put("/visibility/:id", authenticateToken, authorizeRole(["admin", "me
             "UPDATE news SET visible = $1 WHERE id = $2 RETURNING visible",
             [visible, id]
         );
-
         if (result.rowCount === 0) {
             return res.status(404).json({ error: "Новость не найдена" });
         }
-
         res.json({ message: "Видимость обновлена", visible: result.rows[0].visible });
     } catch (error) {
         console.error("Ошибка изменения видимости новости:", error);
