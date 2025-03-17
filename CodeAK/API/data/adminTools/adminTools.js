@@ -80,7 +80,6 @@ router.patch("/:id/reset-password", authenticateToken, authorizeRole(["admin", "
 router.get("/groups", authenticateToken, authorizeRole(["admin", "mentor"]), async (req, res) => {
     try {
         const result = await pool.query('SELECT DISTINCT usergroup FROM users');
-        // Если группы хранятся в поле usergroup, иначе замените на нужное имя столбца
         res.json(result.rows.map(row => row.usergroup));
     } catch (err) {
         res.status(500).json({ error: err.message });
