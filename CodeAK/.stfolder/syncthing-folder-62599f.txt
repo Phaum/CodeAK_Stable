@@ -1,0 +1,5 @@
+# This directory is a Syncthing folder marker.
+# Do not delete.
+
+folderID: poozb-2s7tm
+created: 2025-03-05T02:26:29+03:00
