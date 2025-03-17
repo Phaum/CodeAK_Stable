@@ -32,8 +32,8 @@ const NewsManagement = () => {
     const [currentRecordId, setCurrentRecordId] = useState(null);
     const fileInputRef = useRef(null);
     const [isContentModalOpen, setIsContentModalOpen] = useState(false);
-    const [contentData, setContentData] = useState(''); // Markdown текст
-    const [attachments, setAttachments] = useState([]); // Можно хранить массив файлов или URL-ов
+    const [contentData, setContentData] = useState('');
+    const [attachments, setAttachments] = useState([]);
     const [currentNewsId, setCurrentNewsId] = useState(null);
     const [viewMode, setViewMode] = useState(false);
     const [loading, setLoading] = useState(true);
