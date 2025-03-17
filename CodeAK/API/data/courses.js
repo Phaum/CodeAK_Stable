@@ -12,7 +12,6 @@ const pool = new Pool({
     port: process.env.DB_PORT,
 });
 
-// Создать курс
 coursesRouter.post('/', authenticateToken, authorizeRole(["admin"]), async (req, res) => {
     const { title, description, image_url } = req.body;
     try {
@@ -76,7 +75,6 @@ coursesRouter.get("/",authenticateToken, async (req, res) => {
     }
 });
 
-// Получить курс по id (с разделами)
 coursesRouter.get('/:id',authenticateToken, async (req, res) => {
     const { id } = req.params;
     try {
@@ -101,16 +99,16 @@ coursesRouter.put("/reorder", authenticateToken, authorizeRole(["admin", "mentor
     }
     const client = await pool.connect();
     try {
-        await client.query("BEGIN"); // Начинаем транзакцию
+        await client.query("BEGIN");
         for (const course of courses) {
             await client.query("UPDATE courses SET course_order = $1 WHERE id = $2",
                 [course.course_order, course.id]
             );
         }
-        await client.query("COMMIT"); // Фиксируем изменения
+        await client.query("COMMIT");
         res.json({ message: "Порядок курсов обновлён!" });
     } catch (error) {
-        await client.query("ROLLBACK"); // Откат изменений при ошибке
+        await client.query("ROLLBACK");
         console.error("Ошибка при изменении порядка курсов:", error);
         res.status(500).json({ error: "Ошибка сервера" });
     } finally {
@@ -167,11 +165,8 @@ coursesRouter.put("/:id", authenticateToken, authorizeRole(["admin", "mentor"]),
     }
 });
 
-
-
 coursesRouter.delete("/:id", authenticateToken, authorizeRole(["admin", "mentor"]), async (req, res) => {
     const { id } = req.params;
-
     try {
         const sectionsResult = await pool.query(
             "SELECT file_path FROM course_sections WHERE course_id = $1",
