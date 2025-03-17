@@ -98,9 +98,9 @@ const ContactsManagement = () => {
                 type="primary"
                 icon={<PlusOutlined />}
                 onClick={() => {
-                    setCurrentContact(null);  // Очистка текущего контакта
-                    form.resetFields();  // Очистка формы
-                    setIsModalOpen(true);  // Открытие модального окна
+                    setCurrentContact(null);
+                    form.resetFields();
+                    setIsModalOpen(true);
                 }}
                 style={{ marginBottom: 16 }}
             >
