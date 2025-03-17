@@ -17,7 +17,6 @@ const pool = new Pool({
     port: process.env.DB_PORT,
 });
 
-// const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 const generateToken = (user) => {
     return jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
 };
