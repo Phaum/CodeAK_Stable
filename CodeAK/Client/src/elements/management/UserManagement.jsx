@@ -165,14 +165,8 @@ const UserManagement = () => {
     const onFinish = async (values) => {
         try {
             const response = await registerUser(values);
-            // if (!response.token) throw new Error('Токен не получен');
-
-            // localStorage.setItem('token', response.token);
             message.success('Успешная регистрация!');
-
             setTimeout(() => {
-                // window.location.href = '/login';
-                // handleLoginClick()
             }, 600);
         } catch (error) {
             message.error('Ошибка регистрации');
@@ -180,7 +174,6 @@ const UserManagement = () => {
     };
 
     const userColumns = [
-        // { title: "ID", dataIndex: "id", key: "id" },
         {
             title: "Логин",
             dataIndex: "login",
