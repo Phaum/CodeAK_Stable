@@ -211,10 +211,6 @@ teamsRouter.put("/individual/:id", authenticateToken, authorizeRole(["admin", "m
         if (result.rowCount === 0) {
             return res.status(404).json({ error: "Участник не найден" });
         }
-        // console.log("Вот данные: ", team_name, id);
-        // await pool.query("UPDATE users SET codegroup = $1 WHERE id = $2;",
-        //     [team_name, id]
-        // );
         await pool.query(`
             WITH ranked_individuals AS (
                 SELECT id, RANK() OVER (ORDER BY points DESC) AS new_rank 
