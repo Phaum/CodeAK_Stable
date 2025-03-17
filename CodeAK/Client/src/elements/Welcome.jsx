@@ -83,20 +83,20 @@ const Welcome = () => {
             if (!response.ok) throw new Error(result.error || "Ошибка подтверждения");
             message.success("Email подтверждён!");
             setIsModalOpen(false);
-            window.location.reload(); // Перезагружаем страницу, чтобы обновить статус пользователя
+            window.location.reload();
         } catch (error) {
             message.error(error.message);
         } finally {
             setIsVerifying(false);
         }
     };
-
+    
     const contentStyle = {
         height: '160px',
         lineHeight: '160px',
         textAlign: 'center',
     };
-
+    
     if (loading) return <Spin size="large" style={{ display: 'block', margin: '50px auto' }} />;
 
     return (
@@ -113,33 +113,6 @@ const Welcome = () => {
                     style={{ marginBottom: 16 }}
                 >
                     <Title level={2}>Привет, пользователь!</Title>
-                    {/*<Carousel*/}
-                    {/*    autoplay={{*/}
-                    {/*        dotDuration: true,*/}
-                    {/*    }}*/}
-                    {/*    autoplaySpeed={2000}*/}
-                    {/*>*/}
-                    {/*    <div>*/}
-                    {/*        <Image*/}
-                    {/*            src="/p1.jpg"*/}
-                    {/*        />*/}
-                    {/*    </div>*/}
-                    {/*    <div>*/}
-                    {/*        <Image*/}
-                    {/*            src="/p2.jfif"*/}
-                    {/*        />*/}
-                    {/*    </div>*/}
-                    {/*    <div>*/}
-                    {/*        <Image*/}
-                    {/*            src="/p3.jpg"*/}
-                    {/*        />*/}
-                    {/*    </div>*/}
-                    {/*    <div>*/}
-                    {/*        <Image*/}
-                    {/*            src="/p4.png"*/}
-                    {/*        />*/}
-                    {/*    </div>*/}
-                    {/*</Carousel>*/}
                     <Paragraph>
                         Команда Code.ak рада приветствовать вас на нашем портале. Здесь вы можете выполнять основные задачи,
                         отслеживать обновления и управлять своим аккаунтом. Нажмите на кнопку ниже, чтобы начать.
