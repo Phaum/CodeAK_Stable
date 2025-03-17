@@ -7,7 +7,6 @@ const { body, validationResult } = require('express-validator');
 const crypto = require('crypto');
 const {sendEmail, sendVerificationEmail} = require('../utils/sendEmail');
 const {baseFrontEndUrl, JWT_SECRET} = require("./constants");
-// import { pool } from '../constants.js';
 const router = express.Router();
 const pool = new Pool({
     user: process.env.DB_USER,
