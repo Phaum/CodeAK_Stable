@@ -1,0 +1,22 @@
+.markdown-container {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.markdown-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 16px;
+    text-align: left;
+}
+
+.markdown-th, .markdown-td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+.markdown-th {
+    /*background-color: #f4f4f4;*/
+    font-weight: bold;
+}
